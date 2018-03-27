@@ -1,0 +1,8 @@
+{
+  "name": "Vimeo Video Field",
+  "description": "Kirby CMS Vimeo Video Field using Vimeo Pro  API.",
+  "author": "Jonatan Eriksson <jonatan.eriksson@gmail.com>",
+  "version" : "0.0.1",
+  "license": "MIT",
+  "type": "kirby-field"
+}
