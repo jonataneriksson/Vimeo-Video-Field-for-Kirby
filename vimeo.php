@@ -4,12 +4,12 @@
  * Put your plugin code here
  */
 
-class RelatedPagesField extends StructureField {
+class VimeoField extends StructureField {
 
   public function content()
   {
       $wrapper = new Brick('div');
-      $wrapper->addClass('RelatedPages');
+      $wrapper->addClass('VimeoField');
       return $wrapper;
   }
 
