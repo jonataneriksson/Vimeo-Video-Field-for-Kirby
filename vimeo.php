@@ -1,28 +1,86 @@
 <?php
 
-/**
- * Put your plugin code here
- */
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+/* !API */
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
-class VimeoField extends StructureField {
+kirby()->routes(
+  array(
+    array(
+      'pattern' => 'vimeo.json',
+      'action'  => function() {
 
-  public function content()
-  {
-      $wrapper = new Brick('div');
-      $wrapper->addClass('VimeoField');
-      return $wrapper;
-  }
+        /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+        /* !Return object */
+        /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
-}
+        $json = (object)[];
+        $before = microtime(true);
 
-/*
-namespace Kirby\Component;
+        /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+        /* !Vimeo API load */
+        /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
-require_once(__DIR__.DS.'lib'.DS.'thumb.php');
-require_once(__DIR__.DS.'lib'.DS.'component.php');
-require_once(__DIR__.DS.'lib'.DS.'drivers.php');
+        require_once 'vendor/autoload.php';
 
-// Initialize the plugin
+        //Initialize
+        $clientid = c::get('vimeo.clientid');
+        $clientsecret = c::get('vimeo.clientsecret');
+        $token = c::get('vimeo.token');
+        $per_page = c::get('vimeo.videosperrequest');
+        $current_page =  get('page');
+        $privacy = c::get('vimeo.privacy');
+        $query = c::get('vimeo.query');
 
-$kirby->set('component', 'thumb', 'Kirby\Component\VideoThumb');
-*/
+        $params = [
+          'page'  => $current_page,
+          'per_page' => $per_page,
+          'query' => $query
+        ];
+
+        //Request
+        $vimeo = new \Vimeo\Vimeo($clientid, $clientsecret);
+        $vimeo->setToken($token);
+        $response = $vimeo->request('/me/videos', $params, 'GET');
+        //Sort
+        if(isset($response['body']['data'])){
+          $videoitems = (array)$response['body']['data'];
+
+          foreach ($videoitems as $videoitem) {
+            //name
+              $video['name'] = (string)$videoitem['name'];
+              $video['duration'] = (string)$videoitem['duration'];
+              $video['width'] = (string)$videoitem['width'];
+              $video['height'] = (string)$videoitem['height'];
+              //videos
+              foreach ($videoitem['files'] as $index => $item):
+                $video[$item['quality']] = (string)$item['link'];
+              endforeach;
+              //thumbnails
+              foreach ((array)$videoitem['pictures']['sizes'] as $item):
+                $video['thumbnail'.$item['width']] = (string)$item['link'].'&';
+              endforeach;
+              //Return
+              $json->videos[] = $video;
+          }
+
+          //Meta
+          $total = $response['body']['total'];
+          $pages = ceil($total/$per_page);
+          $pagesleft = $pages;
+          $after = microtime(true);
+          $meta['loadtime'] = $after - $before;
+          $meta['pages'] = ceil($total/$per_page);
+          $meta['totalvideos'] = $total;
+
+          //Response
+          $json->meta = $meta;
+          //$json->videos = $videos;
+        }
+
+        return new Response(json_encode($json), 'json');
+
+        }
+      )
+    )
+);

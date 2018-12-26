@@ -1,2 +1,2 @@
-# Vimeo-Video-Field-for-Kirby
-Videos from Vimeo PRO to Kirby CMS
+# Vimeo-Client-for-Kirby
+Client Wrapper for Vimeo API in Kirby CMS.
